@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding-block: 10vh;
+            height: auto;
+            width: 100vw;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgb(207, 207, 207);
+            gap: 20px;
+        }
+
+        form {
+            background-color: rgb(255, 255, 255);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 5px 5px 10px rgb(66, 66, 66);
+            width: 400px;
+        }
+
+        input[type="submit"] {
+            padding: 10px;
+            border: solid black 1px;
+            cursor: pointer;
+            transition: ease .4s;
+            border-radius: 5px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: rgb(202, 202, 202);
+            transition: ease .4s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form id="formRegistro">
+        <h2>Registrar</h2>
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome">
+        <label for="preco">valor:</label>
+        <input type="text" id="preco" name="preco">
+        <input type="submit" value="Registrar Produto">
+    </form>
+
+    <form id="formExcluir">
+        <h2>Excluir por id</h2>
+        <label for="id">id:</label>
+        <input type="text" id="id">
+        <input type="submit" value="Excluir Produto">
+    </form>
+
+    <form id="formBuscar">
+        <h2>Buscar por id</h2>
+        <label for="idBusca">id:</label>
+        <input type="text" id="idBusca">
+        <input type="submit" value="Excluir Produto">
+    </form>
+
+    <form id="formListar">
+        <h2>Listar todos produtos</h2>
+        <input type="submit" value="Listar Produtos">
+    </form>
+
+    <form id="formAtualizar">
+        <h2>Atualizar</h2>
+        <label for="idAtualizar">id do produto que deseja atualizar:</label>
+        <input type="text" id="idAtualizar">
+        <label for="nomeAtualizar">Nome:</label>
+        <input type="text" id="nomeAtualizar" name="nome">
+        <label for="precoAtualizar">valor:</label>
+        <input type="text" id="precoAtualizar" name="preco">
+        <input type="submit" value="Atualizar Produto">
+    </form>
+
+
+    <script>
+
+        // Código Js dos formulários
+
+        // FORMULÁRIO DE REGISTRO
+
+        // Obtendo o formulário pelo ID
+        let formRegistro = document.querySelector("#formRegistro");
+
+        formRegistro.addEventListener("submit", async function (e) {
+            // Impendindo o formulário de recarregar a página
+            e.preventDefault();
+
+            // Pegando os valores do formulário
+            const nomeForm = document.querySelector("#nome").value;
+            const precoForm = document.querySelector("#preco").value;
+
+            // Montagem do objeto que será enviado ao servidor. Os objeto enviados deverão conter os nomes de seus atributos igual aos nomes dos atributos da tabela do banco de dados, pois assim o servidor identifica o objeto e o crie internamente antes de registra-lo no banco de dados.
+            const produto = {
+                nome: nomeForm,
+                preco: precoForm
+            }
+
+
+            // Antes de chamar o método fetch, devemos usar o Try, pois pode haver algum erro na requisição, como, por exemplo: servidor Ofline ou url digitada errada.
+            try {
+                // Método fetch sendo chamado para fazer a requisição. Este método recebe dois parâmetros, a url da requisição e as configurações da requisição, como tipo (GET, POST, DELET, PUT), headers, entre outras coisas.
+                // Neste caso vamos armazenar a resposta do fecth em uma variavel chamada response
+                let response = await fetch(
+                    // Primeiro parâmetro é a url, nesse caso é no localhost pela porta 8080, onde estou executando o meu código JAVA
+                    "http://localhost:8080/produto",
+                    // O segundo parâmetro (options) é a configuração dessa requisição
+                    // Com este parâmetro definimos as tres coisas a seguir
+                    {
+                        method: "POST", // Definindo o método da requisição. Para inserção de dados, usamos o metodo POST
+                        headers: { "Content-Type": "application/json" }, // Headers: Cabeçalho da requisição, responsável por passar algumas informações que ficam fora do corpo da requisição. Neste caso, usamos para identificar o tipo de dado que está sendo levado pelo corpo da requisição (Json).
+                        body: JSON.stringify(produto) // O corpo da requisição, onde passamos os valores que queremos enviar ao bakc end. Neste caso, pegamos os dados do formulário e tranformamos em um objeto Produto. Iremos enviar o objeto Produto, para que ele seja cadastrado no sistema.
+                    }
+                );
+
+                // Quando realizamos um requisição ao servidor, caso ele responda, ele irá iformar um status para a resposta. Este status pode ser positivo, informando que a operação ocorreu com sucesso ou, também, pode ser negativo, informando que houve algum erro.
+                // O 'response.ok' retorna true caso a resposta do servidor seja positiva, sendo assim, usamos ele para saber se ocorreu algum erro no servidor, antes de executarmos a nossa lógica com os dados retornados. 
+                if (response.ok) {
+                    // Com a resposta sendo positiva podemos iniciar a nossa operação.
+                    // Aqui eu esperava um objeto Json, então usei o 'response.Json()' para conseguir obter o objeto e trabalhar com ele
+                    let produtoResponse = await response.json();
+                    // Com o objeto em mãos, chamei a função alert e passei uma mensagem usando os valores que obtive na string, exibindo os dados do novo produto cadastrado.
+                    alert("Produto criado com sucesso: \n\nNome: " + produtoResponse.nome + "\nPreço: " + produtoResponse.preco + "\nId: " + produtoResponse.id);
+                } else {
+                    // Caso o retorno não seja positivo (response.ok == false), então tratamos o erro. Eu criei uma função que trata o erro e exibe na tela, então vejam lá dentro a explicação de como retornei o erro aqui. 
+                    tratandoErroRequisicao(response);
+                }
+
+            } catch (error) {
+                // Quando o erro cai aqui, significa que não tivemos nenhum retorno do servidor, ou seja, sua requisição não foi atendida por algum motivo. 
+                alert("Algum erro ocorreu na requisição. Tivemos nenhum retorno do servidor!")
+            }
+
+        });
+
+        // FORMULÁRIO DE EXCLUSÃO
+        // O formulário de exclusão possui algumas diferenças do de registro, então fiz comentário nas diferenças apenas para não ficar repetitivo
+        let formExcluir = document.querySelector("#formExcluir ");
+
+        formExcluir.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const id = document.querySelector("#id").value;
+
+            try {
+                // Nosso fetch fica um pouco diferente aqui
+                // 1. Usamos o método DELETE ao invés do POST, este método não carrega um corpo consigo e é o correto a se usar em operações de exclusão 
+                // 2. Outro ponto é a variavel, em métodos DELETE pasamos as variavei como path variable, que são valores informados como parte da URL (site/usuarios/1 -> sendo 1 o id do usuário)
+                let response = await fetch(`http://localhost:8080/produto/${id}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    alert("O produto foi excluído com sucesso");
+                } else {
+                    tratandoErroRequisicao(response);
+                }
+
+            } catch (error) {
+                alert("Algum erro ocorreu na requisição. Tivemos nenhum retorno do servidor!");
+            }
+
+        });
+
+        // FORMULÁRIO DE LISTAGEM 
+        // Operação usando GET
+        let formListar = document.querySelector("#formListar");
+
+        formListar.addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            try {
+                // Neste caso, usamos o método GET, que é o padrão do fetch, sendo assim não precisamos especifica-lo. Além disso, neste caso de listagem de produtos, não passamos nenhum valor, apenas pedimos uma informação, sendo assim, nossa URL não contém nenhuma variavel.
+                const response = await fetch("http://localhost:8080/produto");
+
+                if (response.ok) {
+                    // No caso da listagem de proutos, eu retornei uma lista, então devemos buscar o Json e lsitar todos os produtos com um for
+                    let produtos = await response.json();
+
+                    let texto = "Produtos encontrado: \n"
+
+                    for(let i = 0; i < produtos.length; i++){
+                        texto += "\nNome: " + produtos[i].nome + "\nPreço: " + produtos[i].preco + "\nId: " + produtos[i].id + "\n";
+                    }
+
+                    alert(texto);
+                } else {
+                    tratandoErroRequisicao(response);
+                }
+
+            } catch (error) {
+                alert("Algum erro ocorreu na requisição. Tivemos nenhum retorno do servidor!")
+            }
+
+        })
+
+        // FORMULÁRIO DE BUSCAR POR ID
+        // Operação usando GET com parâmetros
+        let formBuscar = document.querySelector("#formBuscar");
+
+        formBuscar.addEventListener("submit", async function (e) {
+
+            e.preventDefault();
+
+            let id = document.querySelector("#idBusca").value;
+
+            try {
+                // No caso do ID eu o passei como parte do caminho da URL, mas se estivesse buscando por outros campos, como nome ou etc, poderiam adicionar as variaveis pelo get assim: http://localhost:8080/produto/busca?nome=panela
+                let response = await fetch(`http://localhost:8080/produto/busca/${id}`);
+
+                if (response.ok) {
+                    let produto = await response.json();
+                    alert("O produto encontrado foi\n\nid: " + produto.id + "\nNome: " + produto.nome + "\nPreço: " + produto.preco);
+                } else {
+                    tratandoErroRequisicao(response);
+                }
+            } catch (error) {
+                alert("Algum erro ocorreu na requisição. Tivemos nenhum retorno do servidor!");
+            }
+
+        });
+
+        let formAtualizar = document.querySelector("#formAtualizar");
+
+        formAtualizar.addEventListener("submit", async function(e){
+            e.preventDefault();
+
+            const idForm = document.querySelector("#idAtualizar").value;
+            const nomeForm = document.querySelector("#nomeAtualizar").value;
+            const precoForm = document.querySelector("#precoAtualizar").value;
+
+            let produto = {
+                nome: nomeForm,
+                preco: precoForm
+            }
+
+            try {
+
+                let response = await fetch(`http://localhost:8080/produto/${idForm}`, 
+                        {
+                            method: 'PUT', // Alteramos apena so método para PUT, o resto fica igual a uma requisição POST
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(produto)
+                        });
+
+                if(response.ok){
+                    let produto = await response.json();
+                    alert("produto atualizado\n\nid: " + produto.id + "\nNome: " + produto.nome + "\nPreço: " + produto.preco);
+                } else {
+                    tratandoErroRequisicao(response);
+                }
+
+            } catch (error){
+                alert("Algum erro ocorreu na requisição. Tivemos nenhum retorno do servidor!");
+            }
+            
+        });
+
+        // Função que trata os erros de requisição
+        async function tratandoErroRequisicao(response) {
+
+            /*
+                Em caso de exeções eu criei um objeto padrão e retorno ele sempre que algo da errado. O objeto é este aqui
+
+                erro = {
+                    message: "Produto não encontrado" -> Mensagem explicando o erro
+                    status: "NOT_FOUND" -> Erro http ocorrido
+                }
+
+            */
+
+            let erro = await response.json();
+            alert("Mensagem: " + erro.message + " \nStatus http: " + erro.status);
+        }
+    </script>
+
+</body>
+
+</html>
